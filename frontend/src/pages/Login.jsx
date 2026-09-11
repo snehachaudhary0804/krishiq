@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/api";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -14,22 +14,38 @@ export default function Login() {
   const [step, setStep] = useState("mobile"); // 'mobile' -> 'otp'
 
   // Farmer fields
-  const [farmerId, setFarmerId] = useState("");
-  const [mobile, setMobile] = useState("");
+  const [farmerId, setFarmerId] = useState("UP-AGRI-2026-66402");
+  const [mobile, setMobile] = useState("9634551289");
   const [name, setName] = useState("");
   const [village, setVillage] = useState("");
   const [otp, setOtp] = useState("");
+  const [demoOtp, setDemoOtp] = useState("");
 
   // Staff fields
   const [mode, setMode] = useState("login");
-  const [employeeId, setEmployeeId] = useState("");
-  const [password, setPassword] = useState("");
+  const [employeeId, setEmployeeId] = useState("shlok@admin");
+  const [password, setPassword] = useState("111111");
+  const [centres, setCentres] = useState([]);
+  const [selectedCentre, setSelectedCentre] = useState("");
   const [busy, setBusy] = useState(false);
 
   const { loginSuccess } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
+  useEffect(() => {
+    if (role !== "operator") return;
 
+    async function loadCentres() {
+      try {
+        const data = await api.getPublicCentres();
+        setCentres(data.centres || []);
+      } catch (err) {
+        toast(err.message);
+      }
+    }
+
+    loadCentres();
+  }, [role]);
   function pickRole(r) {
     setRole(r);
     setMode("login");
@@ -51,7 +67,11 @@ export default function Login() {
       if (data.autoName && !name) setName(data.autoName);
       if (data.autoVillage && !village) setVillage(data.autoVillage);
 
-      toast("OTP sent to your mobile");
+      if (data.demoOtp) {
+        setDemoOtp(data.demoOtp);
+      }
+
+      toast("OTP generated successfully");
       setStep("otp");
     } catch (err) {
       toast(err.message);
@@ -129,8 +149,15 @@ export default function Login() {
             </linearGradient>
           </defs>
           <circle cx="700" cy="140" r="230" fill="url(#sky)" />
-          <path d="M0 430 Q 220 340 460 420 T 900 400 V700 H0 Z" fill="url(#hill1)" opacity="0.85" />
-          <path d="M0 520 Q 260 460 500 520 T 900 500 V700 H0 Z" fill="url(#hill2)" />
+          <path
+            d="M0 430 Q 220 340 460 420 T 900 400 V700 H0 Z"
+            fill="url(#hill1)"
+            opacity="0.85"
+          />
+          <path
+            d="M0 520 Q 260 460 500 520 T 900 500 V700 H0 Z"
+            fill="url(#hill2)"
+          />
           {Array.from({ length: 9 }).map((_, row) =>
             Array.from({ length: 14 }).map((_, col) => (
               <path
@@ -142,14 +169,24 @@ export default function Login() {
                 strokeLinecap="round"
                 fill="none"
               />
-            ))
+            )),
           )}
           {/* simple farmer silhouette, walking the field at dusk */}
           <g transform="translate(150,470)" fill="#0a2e1c" opacity="0.9">
             <circle cx="18" cy="0" r="10" />
             <path d="M18 10 C 6 16 2 34 4 58 L 12 58 L 14 34 L 20 58 L 30 58 C 30 34 30 20 18 10 Z" />
-            <path d="M4 24 L -18 6" stroke="#0a2e1c" strokeWidth="5" strokeLinecap="round" />
-            <path d="M-18 6 L -18 -26" stroke="#0a2e1c" strokeWidth="4" strokeLinecap="round" />
+            <path
+              d="M4 24 L -18 6"
+              stroke="#0a2e1c"
+              strokeWidth="5"
+              strokeLinecap="round"
+            />
+            <path
+              d="M-18 6 L -18 -26"
+              stroke="#0a2e1c"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
           </g>
         </svg>
       </div>
@@ -162,9 +199,14 @@ export default function Login() {
               <div className="brand" style={{ color: "var(--brand)" }}>
                 <span
                   className="brand-mark"
-                  style={{ background: "var(--brand-light)", border: "1px solid var(--border)" }}
+                  style={{
+                    background: "var(--brand-light)",
+                    border: "1px solid var(--border)",
+                  }}
                 >
-                  <IconLeaf style={{ width: 17, height: 17, color: "var(--brand)" }} />
+                  <IconLeaf
+                    style={{ width: 17, height: 17, color: "var(--brand)" }}
+                  />
                 </span>
                 {t("appName")}
               </div>
@@ -218,7 +260,11 @@ export default function Login() {
                 </div>
                 <button
                   className="btn"
-                  style={{ width: "100%", marginTop: 12, justifyContent: "center" }}
+                  style={{
+                    width: "100%",
+                    marginTop: 12,
+                    justifyContent: "center",
+                  }}
                   disabled={busy}
                   type="submit"
                 >
@@ -230,6 +276,51 @@ export default function Login() {
             {/* Farmer Step 2: Enter OTP */}
             {role === "farmer" && step === "otp" && (
               <form onSubmit={verifyOtp}>
+                {demoOtp && (
+                  <div
+                    style={{
+                      background: "#ecfdf3",
+                      border: "1px solid #86efac",
+                      borderRadius: 10,
+                      padding: "12px 14px",
+                      marginBottom: 14,
+                      textAlign: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: "#166534",
+                        marginBottom: 4,
+                        fontWeight: 600,
+                      }}
+                    >
+                      DEMO OTP
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 24,
+                        fontWeight: 800,
+                        letterSpacing: 5,
+                        color: "#15803d",
+                      }}
+                    >
+                      {demoOtp}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "#4b5563",
+                        marginTop: 4,
+                      }}
+                    >
+                      Use this OTP to continue
+                    </div>
+                  </div>
+                )}
+
                 <div className="field">
                   <label>{t("enterOtp")}</label>
                   <input
@@ -237,6 +328,7 @@ export default function Login() {
                     onChange={(e) => setOtp(e.target.value)}
                     placeholder="6-digit OTP"
                     maxLength={6}
+                    inputMode="numeric"
                     required
                   />
                 </div>
@@ -260,7 +352,11 @@ export default function Login() {
                 </div>
                 <button
                   className="btn"
-                  style={{ width: "100%", marginTop: 12, justifyContent: "center" }}
+                  style={{
+                    width: "100%",
+                    marginTop: 12,
+                    justifyContent: "center",
+                  }}
                   disabled={busy}
                   type="submit"
                 >
@@ -269,7 +365,11 @@ export default function Login() {
                 <button
                   type="button"
                   className="btn alt"
-                  style={{ width: "100%", marginTop: 8, justifyContent: "center" }}
+                  style={{
+                    width: "100%",
+                    marginTop: 8,
+                    justifyContent: "center",
+                  }}
                   onClick={() => setStep("mobile")}
                 >
                   Change ID / Mobile number
@@ -280,18 +380,74 @@ export default function Login() {
             {/* Staff Login / Register */}
             {role !== "farmer" && (
               <form onSubmit={staffSubmit}>
+                {/* ONLY OPERATOR */}
+                {role === "operator" && (
+                  <div className="field">
+                    <label>Select Centre</label>
+
+                    <select
+                      value={selectedCentre}
+                      onChange={(e) => {
+                        const centreId = e.target.value;
+                        setSelectedCentre(centreId);
+
+                        const centre = centres.find((c) => c._id === centreId);
+
+                        if (centre?.operator) {
+                          const operatorId = centre.operator.employeeId || "";
+
+                          setEmployeeId(operatorId);
+
+                          const demoPasswords = {
+                            "shreyaa@operator": "222222",
+                            "tulsi@operator": "333333",
+                            "sneha@operator": "555555",
+                            "sumit@operator": "444444",
+                            "shlokk@operator": "666666",
+                            "tiya@operator": "000000",
+                            "sumit2@operator": "777777",
+                            "krish@operator": "123456",
+                          };
+
+                          setPassword(
+                            demoPasswords[operatorId.toLowerCase()] || "",
+                          );
+                        } else {
+                          setEmployeeId("");
+                          setPassword("");
+                        }
+                      }}
+                      required
+                    >
+                      <option value="">Select your centre</option>
+
+                      {centres.map((centre) => (
+                        <option key={centre._id} value={centre._id}>
+                          {centre.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {/* OPERATOR ID / ADMIN ID */}
                 <div className="field">
-                  <label>{role === "operator" ? "Operator ID" : "Admin ID"}</label>
+                  <label>
+                    {role === "operator" ? "Operator ID" : "Admin ID"}
+                  </label>
+
                   <input
                     value={employeeId}
                     onChange={(e) => setEmployeeId(e.target.value)}
                     placeholder={`e.g. name@${role}`}
                   />
-                </div>
+                </div>{" "}
                 {mode === "register" && (
                   <div className="field">
                     <label>{t("name")}</label>
-                    <input value={name} onChange={(e) => setName(e.target.value)} />
+                    <input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
                   </div>
                 )}
                 <div className="field">
@@ -310,7 +466,10 @@ export default function Login() {
                 >
                   {busy ? "..." : t("continue")}
                 </button>
-                <p className="muted" style={{ marginTop: 10, textAlign: "center" }}>
+                <p
+                  className="muted"
+                  style={{ marginTop: 10, textAlign: "center" }}
+                >
                   {mode === "login" ? (
                     <>
                       New {role}?{" "}
@@ -342,7 +501,9 @@ export default function Login() {
               </form>
             )}
           </div>
-          <p className="login-footnote">Built to simplify the farming journey.</p>
+          <p className="login-footnote">
+            Built to simplify the farming journey.
+          </p>
         </div>
       </div>
     </div>

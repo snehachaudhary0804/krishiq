@@ -76,6 +76,8 @@ export const api = {
 
   // centres
   getCentres: () => request("/centres"),
+  getPublicCentres: () =>
+  request("/centres/public", { auth: false }),
   getNearbyCentres: (lat, lng) => request(`/centres/nearby?lat=${lat}&lng=${lng}`),
   createCentre: (payload) => request("/centres", { method: "POST", body: payload }),
   updateCentre: (id, payload) => request(`/centres/${id}`, { method: "PUT", body: payload }),
