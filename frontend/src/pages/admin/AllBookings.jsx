@@ -189,7 +189,6 @@ export default function AllBookings() {
         overflowY: "visible",
         padding: "0 0 40px",
         margin: 0,
-        boxSizing: "border-box",
         position: "relative",
         isolation: "isolate",
       }}

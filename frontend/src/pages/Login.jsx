@@ -407,6 +407,7 @@ export default function Login() {
                             "tiya@operator": "000000",
                             "sumit2@operator": "777777",
                             "krish@operator": "123456",
+                            "anshika@operator": "109876",
                           };
 
                           setPassword(
